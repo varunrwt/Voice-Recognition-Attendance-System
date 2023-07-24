@@ -1,0 +1,54 @@
+import speech_recognition as sr
+import csv
+from datetime import date
+import tkinter as tk
+
+# Initialize the recognizer
+r = sr.Recognizer()
+
+def record_audio():
+    with sr.Microphone() as source:
+        print("Listening...")
+        audio = r.listen(source)
+        try:
+            text = r.recognize_google(audio)
+            return text.lower()
+        except sr.UnknownValueError:
+            print("Sorry, I could not understand.")
+        except sr.RequestError as e:
+            print(f"Could not request results from Google Speech Recognition service; {e}")
+
+def mark_attendance(student_id):
+    today = date.today()
+    with open('attendance.csv', mode='a', newline='') as file:
+        writer = csv.writer(file)
+        writer.writerow([today, student_id])
+
+def recognize_speech():
+    output_text.delete("1.0", tk.END)
+    output_text.insert(tk.END, "Please say your student ID.\n")
+    while True:
+        text = record_audio()
+        if text is not None:
+            if text == "stop":
+                break
+            else:
+                mark_attendance(text)
+                output_text.insert(tk.END, f"Attendance marked for student ID: {text}\n")
+
+def start_attendance():
+    recognize_speech()
+
+# Create the main window
+window = tk.Tk()
+window.title("Attendance Management System")
+
+# Create the GUI elements
+start_button = tk.Button(window, text="Start Attendance", command=start_attendance)
+start_button.pack(pady=10)
+
+output_text = tk.Text(window, height=10, width=30)
+output_text.pack(pady=10)
+
+# Run the main window loop
+window.mainloop()
